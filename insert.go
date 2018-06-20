@@ -21,6 +21,7 @@ type insertData struct {
 	Values            [][]interface{}
 	Suffixes          exprs
 	Select            *SelectBuilder
+	Output            []string
 }
 
 func (d *insertData) Exec() (sql.Result, error) {
@@ -80,6 +81,11 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 		sql.WriteString("(")
 		sql.WriteString(strings.Join(d.Columns, ","))
 		sql.WriteString(") ")
+	}
+
+	if len(d.Output) > 0 {
+		sql.WriteString("OUTPUT ")
+		sql.WriteString(fmt.Sprintf("%s ", strings.Join(d.Output, ",")))
 	}
 
 	if d.Select != nil {
@@ -248,4 +254,9 @@ func (b InsertBuilder) SetMap(clauses map[string]interface{}) InsertBuilder {
 // If Values and Select are used, then Select has higher priority
 func (b InsertBuilder) Select(sb SelectBuilder) InsertBuilder {
 	return builder.Set(b, "Select", &sb).(InsertBuilder)
+}
+
+// Output adds insert output columns
+func (b InsertBuilder) Output(args ...interface{}) InsertBuilder {
+	return builder.Append(b, "Output", args...).(InsertBuilder)
 }

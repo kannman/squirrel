@@ -103,3 +103,16 @@ func TestInsertBuilderOutput(t *testing.T) {
 	expectedArgs := []interface{}{1}
 	assert.Equal(t, expectedArgs, args)
 }
+
+func TestInsertBuilderOutputInto(t *testing.T) {
+	b := Insert("table").Columns("field1").Values(1).OutputInto("table1_out", "inserted.ID")
+
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "INSERT INTO table (field1) OUTPUT inserted.ID INTO table1_out VALUES (?)"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1}
+	assert.Equal(t, expectedArgs, args)
+}

@@ -21,6 +21,8 @@ type updateData struct {
 	Limit             string
 	Offset            string
 	Suffixes          exprs
+	Output            []string
+	OutputInto        string
 }
 
 type setClause struct {
@@ -88,6 +90,17 @@ func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
 		setSqls[i] = fmt.Sprintf("%s = %s", setClause.column, valSql)
 	}
 	sql.WriteString(strings.Join(setSqls, ", "))
+
+	if len(d.Output) > 0 {
+		sql.WriteString(" OUTPUT ")
+		sql.WriteString(fmt.Sprintf("%s", strings.Join(d.Output, ",")))
+	}
+
+	if d.OutputInto != "" {
+		sql.WriteString(" INTO ")
+		sql.WriteString(d.OutputInto)
+		sql.WriteString("")
+	}
 
 	if len(d.WhereParts) > 0 {
 		sql.WriteString(" WHERE ")
@@ -229,4 +242,14 @@ func (b UpdateBuilder) Offset(offset uint64) UpdateBuilder {
 // Suffix adds an expression to the end of the query
 func (b UpdateBuilder) Suffix(sql string, args ...interface{}) UpdateBuilder {
 	return builder.Append(b, "Suffixes", Expr(sql, args...)).(UpdateBuilder)
+}
+
+// Output adds insert output columns
+func (b UpdateBuilder) OutputInto(into string, args ...interface{}) UpdateBuilder {
+	return builder.Set(b, "OutputInto", into).(UpdateBuilder).Output(args...)
+}
+
+// Output adds insert output columns
+func (b UpdateBuilder) Output(args ...interface{}) UpdateBuilder {
+	return builder.Append(b, "Output", args...).(UpdateBuilder)
 }

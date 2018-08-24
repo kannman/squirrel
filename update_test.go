@@ -66,3 +66,30 @@ func TestUpdateBuilderNoRunner(t *testing.T) {
 	_, err := b.Exec()
 	assert.Equal(t, RunnerNotSet, err)
 }
+
+func TestUpdateBuilderOutput(t *testing.T) {
+	b := Update("test").Set("x", 1).Output("inserted.ID").Where("id > ?", 1)
+
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "UPDATE test SET x = ? OUTPUT inserted.ID WHERE id > ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1, 1}
+	assert.Equal(t, expectedArgs, args)
+}
+
+func TestUpdateBuilderOutputInto(t *testing.T) {
+	b := Update("test").Set("x", 1).
+		OutputInto("table1_out", "inserted.ID").Where("id > ?", 1)
+
+	sql, args, err := b.ToSql()
+	assert.NoError(t, err)
+
+	expectedSql := "UPDATE test SET x = ? OUTPUT inserted.ID INTO table1_out WHERE id > ?"
+	assert.Equal(t, expectedSql, sql)
+
+	expectedArgs := []interface{}{1, 1}
+	assert.Equal(t, expectedArgs, args)
+}

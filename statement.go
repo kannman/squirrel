@@ -35,6 +35,11 @@ func (b StatementBuilderType) RunWith(runner BaseRunner) StatementBuilderType {
 	return setRunWith(b, runner).(StatementBuilderType)
 }
 
+// Merge returns a MergeBuilder for this StatementBuilderType.
+func (b StatementBuilderType) Merge(table string) MergeBuilder {
+	return MergeBuilder(b).Table(table)
+}
+
 // StatementBuilder is a parent builder for other builders, e.g. SelectBuilder.
 var StatementBuilder = StatementBuilderType(builder.EmptyBuilder).PlaceholderFormat(Question)
 
@@ -80,4 +85,11 @@ func Case(what ...interface{}) CaseBuilder {
 
 	}
 	return b
+}
+
+// Merge returns a new MergeBuilder with the given table name.
+//
+// See MergeBuilder.Table.
+func Merge(table string) MergeBuilder {
+	return StatementBuilder.Merge(table)
 }

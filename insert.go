@@ -23,6 +23,7 @@ type insertData struct {
 	Select            *SelectBuilder
 	Output            []string
 	OutputInto        string
+	SkipCheck         bool
 }
 
 func (d *insertData) Exec() (sql.Result, error) {
@@ -51,7 +52,7 @@ func (d *insertData) QueryRow() RowScanner {
 }
 
 func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
-	if len(d.Into) == 0 {
+	if !d.SkipCheck && len(d.Into) == 0 {
 		err = errors.New("insert statements must specify a table")
 		return
 	}
@@ -74,9 +75,11 @@ func (d *insertData) ToSql() (sqlStr string, args []interface{}, err error) {
 		sql.WriteString(" ")
 	}
 
-	sql.WriteString("INTO ")
-	sql.WriteString(d.Into)
-	sql.WriteString(" ")
+	if len(d.Into) > 0 {
+		sql.WriteString("INTO ")
+		sql.WriteString(d.Into)
+		sql.WriteString(" ")
+	}
 
 	if len(d.Columns) > 0 {
 		sql.WriteString("(")
@@ -271,4 +274,9 @@ func (b InsertBuilder) OutputInto(into string, args ...interface{}) InsertBuilde
 // Output adds insert output columns
 func (b InsertBuilder) Output(args ...interface{}) InsertBuilder {
 	return builder.Append(b, "Output", args...).(InsertBuilder)
+}
+
+// NoTable marks table as no required.
+func (b InsertBuilder) NoTable() InsertBuilder {
+	return builder.Set(b, "SkipCheck", true).(InsertBuilder)
 }

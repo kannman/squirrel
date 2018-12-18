@@ -23,6 +23,7 @@ type updateData struct {
 	Suffixes          exprs
 	Output            []string
 	OutputInto        string
+	SkipCheck         bool
 }
 
 type setClause struct {
@@ -56,7 +57,7 @@ func (d *updateData) QueryRow() RowScanner {
 }
 
 func (d *updateData) ToSql() (sqlStr string, args []interface{}, err error) {
-	if len(d.Table) == 0 {
+	if !d.SkipCheck && len(d.Table) == 0 {
 		err = fmt.Errorf("update statements must specify a table")
 		return
 	}
@@ -252,4 +253,9 @@ func (b UpdateBuilder) OutputInto(into string, args ...interface{}) UpdateBuilde
 // Output adds insert output columns
 func (b UpdateBuilder) Output(args ...interface{}) UpdateBuilder {
 	return builder.Append(b, "Output", args...).(UpdateBuilder)
+}
+
+// NoTable marks table as no required.
+func (b UpdateBuilder) NoTable() UpdateBuilder {
+	return builder.Set(b, "SkipCheck", true).(UpdateBuilder)
 }
